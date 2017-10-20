@@ -18,7 +18,7 @@ Ball collision in two dimensions, acceleration calculation.
    
    - Calculate new angular velocity:
    
-   **w = m * r * my*(u_p - v_p)/I * (e_r x e_n)     ,where e,v,e are 2D - vectors  and I = 0.4mr^2**
+   **w = m*r*my*(u_p - v_p)/I * (e_r x e_n)     ,where e,v,e are 2D - vectors  and I = 0.4mr^2**
    
    - Calculate gravitational pull:
    
