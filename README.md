@@ -18,7 +18,7 @@ Ball collision in two dimensions, acceleration calculation.
    
    - Calculate new angular velocity:
    
-   **w = mr*my*(u_p - v_p)/I * (e_r x e_n)     ,where e,v,e are 2D - vectors  and I = 0.4mr^2**
+   **w = m*r*my*(u_p - v_p)/I * (e_r x e_n)     ,where e,v,e are 2D - vectors  and I = 0.4mr^2**
    
    - Calculate gravitational pull:
    
@@ -30,6 +30,7 @@ Ball collision in two dimensions, acceleration calculation.
    - The Balls and Neutron Stars are initiated with a predefined sized array. The maximum number of Balls and 
     Neutron Stars are 15 and 10.
    - When balls are colliding with a wall there is no energy lost in the collision.
+   - Neutron Stars are not subject to collision. 
    - The density of the balls are constant. The value of radius is the same as the mass.
    - Movement is restricted to two dimensions.
   
