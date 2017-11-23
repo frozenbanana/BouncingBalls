@@ -183,7 +183,6 @@ void keyPressed()
   if(keyCode == LEFT)
   {
     balls[currentBall-1].velo.x -= 0.5;
-    println(balls[currentBall].velo.x);
   }
 
   if(keyCode == RIGHT)
@@ -418,6 +417,7 @@ class Ball {
 
         distance = R.mag();
         minimumDistance = neuStars[i].radius + this.radius;
+        // make sure that gravity does not apply more than distance between objects
         if(distance < minimumDistance){
           distance = minimumDistance;
         }
