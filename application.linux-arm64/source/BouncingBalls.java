@@ -1,33 +1,51 @@
-float G = pow(66.74,-12); 
-String imageString = "http://images.spaceref.com/news/2012/ooM170334512L_thumb.jpg";
-float collisionFactor = 0.77;
-float frictionFactor = 0.5;
+import processing.core.*; 
+import processing.data.*; 
+import processing.event.*; 
+import processing.opengl.*; 
+
+import java.util.HashMap; 
+import java.util.ArrayList; 
+import java.io.File; 
+import java.io.BufferedReader; 
+import java.io.PrintWriter; 
+import java.io.InputStream; 
+import java.io.OutputStream; 
+import java.io.IOException; 
+
+public class BouncingBalls extends PApplet {
+
+float G = pow(66.74f,-12);                 // G when calculating acceleration 
+String imageString = "comet.jpg";         // texture to balls
+float collisionFactor = 0.77f;             // e
+float frictionFactor = 0.5f;               // my
 int totalBalls = 15;
 Ball[] balls = new Ball[totalBalls];
 int currentBall;
 int totalNeuStars = 10;
 float neutronStarMassScaler = pow(10, 25);
 NeutronStar[] neuStars = new NeutronStar[totalNeuStars];
-boolean cometMode;
+boolean cometMode;                        // trigger to change to texture
+boolean continueProgram;                  // User starts program by pressing enter
 int currentNeuStar;
 float[] distance;
 
-int loadingTime = 20000;
 int startTime;
+float time;
 int width, height;
 int startPhase; 
 
-void setup() {
+public void setup() {
     width = 600;
     height = 700;
-    size(600, 700, P3D);
+    
     noStroke();
-    smooth();
+    
     background(0);
     cometMode = false;
+    continueProgram = false;
 };
 
-void InitScen(){
+public void InitScen(){
     println("Starting Program: Load phase initiated.");
     println("Starting InitScen");
     currentBall = 0;
@@ -44,8 +62,8 @@ void InitScen(){
       PVector initPos = new PVector(0, 0);
       PVector initVelo = new PVector(0,0);
       PVector initAcc = new PVector( 0, 0);
-      float r = 30.0;
-      color c = color(random(255), random(255), random(255));
+      float r = 30.0f;
+      int c = color(random(255), random(255), random(255));
       float m = r; 
       Ball ball = new Ball(i, imageString, initPos, initVelo, initAcc, r, c, m);
       balls[i] = ball;
@@ -56,35 +74,48 @@ void InitScen(){
     println("Load phase is complete.");
 }
 
-void ShowLoadingScreen()
+public void ShowLoadingScreen(String menuText)
 {
       background(0);
       textSize(32);
       fill(255);
       textAlign(CENTER);
-      text("Loading...", width/2, height/2);
+      text(menuText, width/2, height/2);
       textSize(24);
-      text("Controls:", width/2, height*0.7);
+      text("Controls:", width/2, height*0.65f);
       textSize(16);
-      text("Mouse (R/L)  -  Add/Remove Neutron Star", width/2, height*0.75);
-      text("n/N  -  Add/Remove Ball", width/2, height*0.8);
-      text("+/-  -  Preset size of Ball", width/2, height*0.85);
-      text("Space  -  Toggle Texture Mode", width/2, height*0.9);
+      text("Mouse (R/L)  -  Add/Remove Neutron Star", width/2, height*0.7f);
+      text("n/N  -  Add/Remove Ball", width/2, height*0.75f);
+      text("Arrow keys  -  Change velocity of latest Ball", width/2, height*0.8f);
+      text("+/-  -  Preset size of Ball", width/2, height*0.85f);
+      text("Space  -  Toggle Texture Mode", width/2, height*0.9f);
       noFill();
 }
 
-void draw() {
+public void PressEnterToContinue()
+{
+  background(0); 
+  textSize(32);
+  fill(255);
+  text("Press Enter to Start", width/2, height/2);
+  noFill();
+}
+
+public void draw() {
     switch(startPhase)
     {
       case 0:
-        ShowLoadingScreen();
+        ShowLoadingScreen("Loading...");
         thread("InitScen");
         startPhase++;
         return;
       case 1:
-      while(balls[totalBalls -1] == null)
-        delay(10000);
-        
+        delay(800);
+        ShowLoadingScreen("Press Enter to Continue");
+        if(continueProgram == true)
+          startPhase++;
+      return;
+      case 2:
       background(0); 
 
       /* Render neutron stars who have been initiated  */
@@ -100,14 +131,16 @@ void draw() {
           if(balls[i].present == true)
           {
             /* Apply gravity pull from all neutron stars  */
+            int activeNeuStars = 0;
             for(int j = 0; j < totalNeuStars; j++)
             {
               if(neuStars[j].present == true)
               {
-                balls[i].ApplyGravity(neuStars[j].mass, neuStars[j].pos);
+                activeNeuStars++;
               }
             }
              /* Update balls and render  */
+              balls[i].ApplyGravity(neuStars, activeNeuStars);
               balls[i].Wallcollision();
               balls[i].Move();
               balls[i].Render();
@@ -129,20 +162,24 @@ void draw() {
     }
 };
 
-void keyPressed()
+public void keyPressed()
 {
+  if( key == 10  )
+  {
+    continueProgram = true;
+  }
   if(key == '+')
   {
-    balls[currentBall].AddToRadius(3.00);
-    if(balls[currentBall].radius > 75.0)
-      balls[currentBall].AddToRadius(-3.00);
+    balls[currentBall].AddToRadius(3.00f);
+    if(balls[currentBall].radius > 75.0f)
+      balls[currentBall].AddToRadius(-3.00f);
   } 
   
   if(key == '-')
   {
-    balls[currentBall].AddToRadius(-3.00);
-    if(balls[currentBall].radius < 10.0)
-      balls[currentBall].AddToRadius(3.00);
+    balls[currentBall].AddToRadius(-3.00f);
+    if(balls[currentBall].radius < 10.0f)
+      balls[currentBall].AddToRadius(3.00f);
   } 
   
   if(key == ' ')
@@ -150,6 +187,25 @@ void keyPressed()
     cometMode = !cometMode;
   }
   
+  if(keyCode == UP)
+  {
+    balls[currentBall-1].velo.y -= 0.5f;
+  }
+
+  if(keyCode == DOWN)
+  {
+    balls[currentBall-1].velo.y += 0.5f;
+  }
+  if(keyCode == LEFT)
+  {
+    balls[currentBall-1].velo.x -= 0.5f;
+  }
+
+  if(keyCode == RIGHT)
+  {
+    balls[currentBall-1].velo.x += 0.5f;
+  }
+
   if(key == 'n') // Add ball
   {
     println("Making ball nr " + currentBall + " active.");
@@ -166,8 +222,8 @@ void keyPressed()
     if(currentBall < 0)
       currentBall = 0;
       
-    balls[currentBall].present = !balls[currentBall].present;
-    println("Making ball nr " + currentBall + " deactive.");
+    balls[currentBall].ToggleAcive();
+    println("Making ball nr " + currentBall + " switched state.");
 
   }
 
@@ -175,9 +231,14 @@ void keyPressed()
   {
     exit();
   }
+   if(key == 'p')
+  {
+    if (looping)  noLoop();
+    else          loop();
+  }
 }
 
-void mousePressed()
+public void mousePressed()
 {
   if(mouseButton == LEFT)
     startTime = millis();
@@ -189,7 +250,7 @@ void mousePressed()
   }
 }
 
-void mouseReleased()
+public void mouseReleased()
 {
   if(mouseButton == LEFT)
   {
@@ -201,7 +262,7 @@ void mouseReleased()
   else if(mouseButton == RIGHT && currentNeuStar >= 0)
   {
     println("Making neutron star nr " + currentNeuStar + " deactive.");
-    neuStars[currentNeuStar].present = false;
+    neuStars[currentNeuStar].SetInactive();
   }
 }
 
@@ -212,15 +273,15 @@ class Ball {
   PVector velo;
   PVector acc;
   float radius;
-  color col;
+  int col;
   float mass;
   PShape ballShape;
   PImage imageAsTexture;
   float angleOfVelo;
   PVector angularVelo;
   float momOfinertia;
-
-  Ball(int i, String texString, PVector p, PVector v, PVector a, float r, color c, float  m)
+  float t;
+  Ball(int i, String texString, PVector p, PVector v, PVector a, float r, int c, float  m)
   {
     present = false;
     id = i;
@@ -230,15 +291,16 @@ class Ball {
     radius = r;
     col = c;
     mass = m;
-    imageAsTexture = loadImage(texString); //<>//
+    imageAsTexture = loadImage(texString);
     ballShape = createShape(SPHERE, radius);
     ballShape.setTexture(imageAsTexture);
     angleOfVelo = velo.heading();
     angularVelo = new PVector(0,0);
-    momOfinertia = 0.4 * this.mass * this.radius * this.radius;
+    momOfinertia = 0.4f * this.mass * this.radius * this.radius;
+    t = 0.4f;
   }
 
-  void AddToRadius(float r)
+  public void AddToRadius(float r)
   {
     /* Updates both radius and shape  */
     this.radius += r;
@@ -246,19 +308,19 @@ class Ball {
     this.ballShape.setTexture(imageAsTexture);
   }
 
-  void Move()
+  public void Move()
   {
-    this.pos.x += this.velo.x;
-    this.pos.y += this.velo.y;
-    this.velo.x = (this.velo.x + this.acc.x);
-    this.velo.y = (this.velo.y + this.acc.y);
-
+    this.velo.x += this.acc.x * t*t/2;
+    this.velo.y += this.acc.y * t*t/2;
+    this.pos.x += this.velo.x * t;
+    this.pos.y += this.velo.y * t;
+//    println(velo.x + " : " + velo.y );
     this.angleOfVelo = this.velo.heading();
     this.ballShape.rotate(this.angularVelo.mag()); 
   }
   
   /* Reflects current speed and keeps the balls in the window  */
-  void Wallcollision()
+  public void Wallcollision()
   {
     if( this.pos.x + this.radius > width )
    {
@@ -284,7 +346,7 @@ class Ball {
    }
   }
   
-  void Ballcollision(Ball[] otherBalls, int size)
+  public void Ballcollision(Ball[] otherBalls, int size)
   {
     float collisionMass; 
     float distanceVecMag, minimumDistance, dot_Vrel;
@@ -348,33 +410,58 @@ class Ball {
     }
   } 
 
+  public void ToggleAcive()
+  {
+    this.present = !this.present;
+    this.velo = new PVector(0,0);
+    this.acc = new PVector(0,0);
+  }
+
   /* Uses an external object to generate an acceleration toward it  */
-  void ApplyGravity(float M, PVector gravityPos)
+  public void ApplyGravity(NeutronStar[] neuStars, int size)
   {
       float a;
       float distance;
-      PVector R =  PVector.sub(gravityPos, this.pos); 
+      float minimumDistance;
+      float F;
+      PVector R;
+      PVector sumAccVec = new PVector(0,0);
 
-      distance = R.mag();
-      if(distance < this.radius)
-        distance = this.radius;
-      
-      float F = G*M*this.mass/(distance*distance);
-      a = F/this.mass;
-      R = R.normalize();
-      R = R.mult(a);
-      this.acc = R.mult(a);
+      for(int i = 0; i < size; i++)
+      {
+        R = PVector.sub(neuStars[i].pos, this.pos); 
+
+        distance = R.mag();
+        minimumDistance = neuStars[i].radius + this.radius;
+        // make sure that gravity does not apply more than distance between objects
+        if(distance < minimumDistance){
+          distance = minimumDistance;
+        }
+        
+        F = G*neuStars[i].mass*this.mass/(distance*distance);
+        a = F/this.mass;
+        R = R.normalize();
+        R = R.mult(a);
+
+        sumAccVec = PVector.add(sumAccVec, R);
+      }
+    
+      this.acc = sumAccVec;
+
   }
 
   /* Render with two different modes  */
-  void Render()
+  public void Render()
   {
     if(cometMode == false)
     {
       fill(this.col);
       ellipse(this.pos.x, this.pos.y, 2*this.radius, 2*this.radius );
-      fill(255);
-      line(this.pos.x, this.pos.y, this.pos.x + this.radius, this.pos.y + this.radius);
+
+      stroke(255);
+      strokeWeight(3);
+      line(this.pos.x, this.pos.y, this.pos.x + this.velo.x, this.pos.y + this.velo.y);
+      noStroke();
     }
     else
       shape(this.ballShape, this.pos.x, this.pos.y);
@@ -388,7 +475,7 @@ class NeutronStar
   float mass;
   float radius;
   PVector pos;
-  color col;
+  int col;
 
   NeutronStar()
   {
@@ -399,7 +486,7 @@ class NeutronStar
     this.col = 255;
   }
 
-  void Init(int timePressed)
+  public void Init(int timePressed)
   {
     if(timePressed > 5)
       timePressed = 5; 
@@ -412,10 +499,26 @@ class NeutronStar
     this.radius = timePressed * 4;
     
   }
+
+  public void SetInactive()
+  {
+    this.present = false;
+    this.mass = 0;
+  }
   
-  void Render()
+  public void Render()
   {
     fill(this.col);
     ellipse(this.pos.x, this.pos.y, this.radius, this.radius );
+  }
+}
+  public void settings() {  size(600, 700, P3D);  smooth(); }
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "BouncingBalls" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
+    }
   }
 }
